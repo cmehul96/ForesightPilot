@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SuccessAnimationIcon } from './icons/SuccessAnimationIcon';
+import { supabase } from '../lib/supabaseClient';
 
 interface PilotModalProps {
   isOpen: boolean;
@@ -50,15 +51,13 @@ export const PilotModal: React.FC<PilotModalProps> = ({ isOpen, onClose }: Pilot
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (name && email && phone && company) {
-      try {
-        await fetch('https://script.google.com/macros/s/AKfycbwLt_7pFynDtghSDwwZxa0XzGzT8LkjBOHQfUJV2HLayHGZ-qnnDZxg0_nAmlqjScuJ/exec', {
-          method: 'POST',
-          body: JSON.stringify({ name, email, phone, company }),
-          headers: { 'Content-Type': 'application/json' },
-        });
+      const { error } = await supabase
+        .from('pilot_requests')
+        .insert([{ name, email, phone, company }]);
+      if (!error) {
         setIsSubmitted(true);
-        setTimeout(handleClose, 2500); // Auto-close after success animation.
-      } catch (error) {
+        setTimeout(handleClose, 2500);
+      } else {
         alert('Failed to submit. Please try again.');
       }
     }
